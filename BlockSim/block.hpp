@@ -29,12 +29,12 @@ public:
     std::map<int,Value,std::greater<int>> txFeesInChain;
     Value valueInChain;
     Value blockReward;
-    Value profitWeight;
+    bool wasUndercut;
     
-    Block(const Block *parent_, const Miner *miner_, BlockTime timeSeconds, std::map<int,Value,std::greater<int>> txFees, BlockHeight height, std::map<int,Value,std::greater<int>> txFeesInChain_,Value valueInChain, Value blockReward, Value profitWeight);
+    Block(const Block *parent_, const Miner *miner_, BlockTime timeSeconds, std::map<int,Value,std::greater<int>> txFees, BlockHeight height, std::map<int,Value,std::greater<int>> txFeesInChain_,Value valueInChain, Value blockReward, bool wasUndercut);
     
     Block(BlockValue blockReward);
-    Block(const Block *parent_, const Miner *miner_, BlockTime timeSeconds_, std::map<int,Value,std::greater<int>> txFees, Value profitWeight);
+    Block(const Block *parent_, const Miner *miner_, BlockTime timeSeconds_, std::map<int,Value,std::greater<int>> txFees, bool wasUndercut);
     
     void reset(const Block *parent, const Miner *miner, BlockTime timeSeconds, std::map<int,Value,std::greater<int>> txFees);
     

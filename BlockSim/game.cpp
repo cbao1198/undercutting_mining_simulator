@@ -39,58 +39,6 @@ GameResult runGame(MinerGroup &minerGroup, Blockchain &blockchain, GameSettings 
         
         assert(blockchain.getTime() == nextTime);
         
-        
-        /*std::cout<<"ALL BLOCKS AT HEIGHT\n";
-        for(auto miner: minerGroup.miners)
-        {
-            block = blockchain.blockByMinerAtHeight(blockchain.getMaxHeightPub(),*miner);
-            //std::cout<<tx.first<<"->"<<tx.second<<std::endl;
-            std::cout<<"block height "<<block->height;
-            std::cout<<" mined by ";
-            //std::cout<<block->miner->name;
-            std::cout<<std::endl;
-           for(auto tx : block->txFeesInChain)
-           {
-            std::cout<<tx.first<<"->"<<tx.second<<std::endl;
-           }
-           //std::cout<<block->value<<std::endl;
-        }*/
-        /*if(blockchain.getTime() % 10 == 1)
-        {
-            std::cout<<"MOST:\n";
-        for(auto tx : blockchain.most(blockchain.getMaxHeightPub()).txFeesInChain)
-           {
-            std::cout<<tx.first<<"->"<<tx.second<<std::endl;
-           }
-           //std::cout<<block->value<<std::endl;
-           std::cout<<"Available:\n";
-        for(auto tx : blockchain.getAvailableTransactions())
-           {
-            std::cout<<tx.first<<"->"<<tx.second<<std::endl;
-           }
-           //std::cout<<block->value<<std::endl;
-        int tmp;
-        std::cin>>tmp;
-        }*/
-        /*std::cout<<"MOST:\n";
-        for(auto tx : blockchain.most(blockchain.getMaxHeightPub()).txFeesInChain)
-           {
-            std::cout<<tx.first<<"->"<<tx.second<<std::endl;
-           }
-           //std::cout<<block->value<<std::endl;*/
-           /*std::cout<<"Available:\n";
-        for(auto tx : blockchain.getAvailableTransactions())
-           {
-            std::cout<<tx.first<<"->"<<tx.second<<std::endl;
-           }
-           //std::cout<<block->value<<std::endl;
-        int tmp;
-        std::cin>>tmp;
-        if(tmp == 0)
-        {
-            break;
-        }*/
-
         //steps through in second intervals
         //on each step each miner gets a turn
         COMMENTARY("Round " << blockchain.getTime() << " of the game..." << std::endl);
@@ -102,30 +50,7 @@ GameResult runGame(MinerGroup &minerGroup, Blockchain &blockchain, GameSettings 
         COMMENTARY("Publish phase:" << std::endl);
         
         minerGroup.nextPublishRound(blockchain);
-        /*std::cout<<"after mining values:\n";
-        for(auto tx: blockchain.getAvailableTransactions())
-        {
-            std::cout<<tx.first<<"->"<<tx.second<<std::endl;
-        }
-        //int tmp;
-        std::cin>>tmp;*/
-        /*std::cout<<"CURRENT WINING CHAIN:\n";
-        for(auto block: blockchain.winningHead().getChain())
-        {
-            //std::cout<<tx.first<<"->"<<tx.second<<std::endl;
-            if(block->height == BlockHeight(0)){
-                break;
-            }
-            std::cout<<"block height "<<block->height;
-            std::cout<<" mined by ";
-            std::cout<<*(block->miner);
-            std::cout<<std::endl;
-           for(auto tx : block->txFeesInChain)
-           {
-            std::cout<<tx.first<<"->"<<tx.second<<std::endl;
-           }
-           std::cout<<block->value<<std::endl;
-        }*/
+        
         auto &winningBlock = blockchain.winningHead();
         COMMENTARY("Round " << blockchain.getTime() << " over. Current blockchain:" << std::endl);
         COMMENTARYBLOCK (
@@ -160,7 +85,7 @@ GameResult runGame(MinerGroup &minerGroup, Blockchain &blockchain, GameSettings 
                 break;
             }
         }
-        if(mined->profitWeight == 1)
+        if(mined->wasUndercut == 1)
         {
             //count number of times undercut
             numUndercut += 1;
@@ -197,13 +122,9 @@ GameResult runGame(MinerGroup &minerGroup, Blockchain &blockchain, GameSettings 
         totalBlocks += miner->getBlocksMinedTotal();
         finalBlocks += minerResults[i].blocksInWinningChain;
     }
-    //std::cout<<std::endl;
-    //std::cout<<"num hit alpha: "<<numUndercut<<std::endl;
-    //std::cout<<"ratio: "<<1.0/winningChain.size()*numUndercut<<std::endl;
     Value moneyLeftAtEnd = blockchain.remFees(*winningChain[0],alpha);
     
     GameResult result(minerResults, totalBlocks, finalBlocks, moneyLeftAtEnd, totalValue,totalVariance);
-    //std::cout<<totalVariance<<std::endl;
     
     assert(winningBlock.valueInChain == totalValue);
     /*for (size_t i = 0; i < minerGroup.miners.size(); i++) {

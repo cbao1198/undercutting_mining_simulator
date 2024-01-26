@@ -42,7 +42,7 @@ class Blockchain {
 public:
     Blockchain(BlockchainSettings blockchainSettings);
     
-    std::unique_ptr<Block> createBlock(const Block *parent, const Miner *miner, std::map<int,Value,std::greater<int>> value, Value profitWeight);
+    std::unique_ptr<Block> createBlock(const Block *parent, const Miner *miner, std::map<int,Value,std::greater<int>> value, bool wasUndercut);
     void reset(BlockchainSettings blockchainSettings);
 
     void publishBlock(std::unique_ptr<Block> block);

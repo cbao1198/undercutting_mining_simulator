@@ -18,10 +18,10 @@ constexpr auto timeMax = std::numeric_limits<TimeType>::max();
 
 Block::Block(BlockValue blockReward_) : Block(nullptr, nullptr, BlockTime(0), std::map<int,Value,std::greater<int>>(), BlockHeight(0), std::map<int,Value,std::greater<int>>(), Value(0), Value(rawValue(blockReward_)), Value(1)) {}
 
-Block::Block(const Block *parent_, const Miner *miner_, BlockTime timeSeconds_, std::map<int,Value,std::greater<int>> txFees ,BlockHeight height_, std::map<int,Value,std::greater<int>> txFeesInChain_, Value valueInChain_, Value blockReward_, Value profitWeight_) : timeBroadcast(timeMax), parent(parent_), miner(miner_), height(height_), timeMined(timeSeconds_), value(getValue(txFees) + blockReward_), txFeesInChain(txFeesInChain_), valueInChain(valueInChain_), blockReward(blockReward_), profitWeight(profitWeight_) {}
+Block::Block(const Block *parent_, const Miner *miner_, BlockTime timeSeconds_, std::map<int,Value,std::greater<int>> txFees ,BlockHeight height_, std::map<int,Value,std::greater<int>> txFeesInChain_, Value valueInChain_, Value blockReward_, bool wasUndercut_) : timeBroadcast(timeMax), parent(parent_), miner(miner_), height(height_), timeMined(timeSeconds_), value(getValue(txFees) + blockReward_), txFeesInChain(txFeesInChain_), valueInChain(valueInChain_), blockReward(blockReward_), wasUndercut(wasUndercut_) {}
 
-Block::Block(const Block *parent_, const Miner *miner_, BlockTime timeSeconds_, std::map<int,Value,std::greater<int>> txFees, Value profitWeight) :
-    Block(parent_, miner_, timeSeconds_, txFees, parent_->height + BlockHeight(1), combineFees(txFees,parent_->txFeesInChain), parent_->valueInChain + parent_->blockReward + getValue(txFees), parent_->nextBlockReward(), profitWeight) {}
+Block::Block(const Block *parent_, const Miner *miner_, BlockTime timeSeconds_, std::map<int,Value,std::greater<int>> txFees, bool wasUndercut) :
+    Block(parent_, miner_, timeSeconds_, txFees, parent_->height + BlockHeight(1), combineFees(txFees,parent_->txFeesInChain), parent_->valueInChain + parent_->blockReward + getValue(txFees), parent_->nextBlockReward(), wasUndercut) {}
 
 void Block::reset(const Block *parent_, const Miner *miner_, BlockTime timeSeconds_, std::map<int,Value,std::greater<int>> txFees) {
     height = parent_->height + BlockHeight(1);
@@ -69,6 +69,7 @@ std::vector<const Block *> Block::getChain() const {
 
 Value Block::getValue(std::map<int,Value,std::greater<int>> txFees)
 {
+    //get total value of a transaction map
     Value val = 0;
     for (auto transaction: txFees)
     {
@@ -80,6 +81,7 @@ Value Block::getValue(std::map<int,Value,std::greater<int>> txFees)
 
 std::map<int,Value,std::greater<int>> Block::combineFees(std::map<int,Value,std::greater<int>> map1, std::map<int,Value,std::greater<int>> map2)
 {
+    //combine two transaction maps
     std::map<int, Value,std::greater<int>> ans;
     for(auto tx : map1)
     {

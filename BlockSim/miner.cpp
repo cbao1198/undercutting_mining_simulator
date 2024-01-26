@@ -126,8 +126,7 @@ void Miner::updateNextPublishTime(BlockTime newTime, const Blockchain &chain) {
 }
 
 void Miner::printStrategy() const {
-    //std::cout<<params.name<<std::endl;
-    //std::cout<< "[" << strategy.get().name  << "] miner " << params.name<<std::endl;
+    std::cout<< "[" << strategy.get().name  << "] miner " << params.name<<std::endl;
 }
 
 std::ostream& operator<<(std::ostream& os, const Miner& miner) {

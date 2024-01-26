@@ -105,23 +105,16 @@ std::map<int,Value,std::greater<int>> txFeesUnder(const Blockchain &chain, ForkF
 }
 
 Value functionForkValPercentage(const Blockchain &chain, const Block &block, Alpha alpha, double funcCoeff) {
+    // take half of total value remaining
     auto maxVal = chain.remFees(block, Alpha(-1));
-    /*for(auto tx: chain.remAlpha(block,-1))
-        {
-            std::cout<<tx.first<<"->"<<tx.second<<std::endl;
-        }*/
-    //std::cout<<"func coeff:"<<funcCoeff<<std::endl;
     double coeff = 1.0 / funcCoeff;
     double newValue = rawValue(maxVal) * coeff;
-    //std::cout<<"new value: "<<Value(newValue)<<std::endl;
     return chain.remAlphaValCapFees(block,newValue,alpha);
 }
 Value functionForkNumPercentage(const Blockchain &chain, const Block &block, Alpha alpha, double funcCoeff) {
-    
+    //take half of NUMBER of transactions
     double coeff = 1.0 / funcCoeff;
-    //std::cout<<"func coeff:"<<funcCoeff<<std::endl;
     double newValue = chain.getTotalTransactions() * coeff;
-    //std::cout<<"new value: "<<Value(newValue)<<std::endl;
     return chain.remFees(block,std::min(Alpha(newValue),alpha));
 }
 

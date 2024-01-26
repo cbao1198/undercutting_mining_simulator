@@ -36,11 +36,11 @@ Blockchain::Blockchain(BlockchainSettings blockchainSettings) :
     reset(blockchainSettings);
 }
 
-std::unique_ptr<Block> Blockchain::createBlock(const Block *parent, const Miner *miner, std::map<int,Value,std::greater<int>> value, Value profitWeight) {
+std::unique_ptr<Block> Blockchain::createBlock(const Block *parent, const Miner *miner, std::map<int,Value,std::greater<int>> value, bool wasUndercut) {
     
     if (_oldBlocks.size() == 0) {
         
-        return std::make_unique<Block>(parent, miner, getTime(), value, profitWeight);
+        return std::make_unique<Block>(parent, miner, getTime(), value, wasUndercut);
     }
     
     auto block = std::move(_oldBlocks.back());
@@ -187,7 +187,6 @@ void Blockchain::advanceToTime(BlockTime time) {
         }*/
         availableTransactions[transaction.first] = transactionFeeRate[transaction.first] * time;
     }
-    //valueNetworkTotal += transactionFeeRate * (time - timeInSecs);
     timeInSecs = time;
 }
 
