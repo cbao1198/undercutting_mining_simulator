@@ -42,9 +42,11 @@ output file gives a list of the percentage of miners who used the given strategy
 in each round. This demonstrates the idea that miners will either all converge to
 an optimal strategy or oscillate between strategies when there is no equilibrium.
 
-SelfishSim evalutates the effectiveness of the selfish mining strategy. It
-produces a single file which contains the percentage profit earned by the
-selfish miner given the percentage of hash power which it controls. 
+There are a few additional files in the folder including overallResults.csv which will write 
+the inter block variance(i.e. variance in values of adjacent blocks) and the weight spread(i.e. difference
+in strategy weights between highest and lowest)
+
+plot.py can be used as a starting point to graph the strategy weights across multiple games
 
 Disclaimer
 -----------
@@ -53,11 +55,7 @@ Note that the Bitcoin Mining Simulator is under active development, and should
 be considered experimental software.
 
 Although the Bitcoin Mining Simulator is actively used by our group for research
-studies, it is still possible there are unknown bugs in the simulator. We plan on 
-writing comprehensive tests to verify the results of all included components.
-Prior to using the Bitcoin Mining Simulator for your own research we encourage
-you to write tests (and submit pull requests!) for any testing that isn't
-currently included in our test scripts.
+studies, it is still possible there are unknown bugs in the simulator.
 
 License
 -------
