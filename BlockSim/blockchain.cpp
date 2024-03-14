@@ -28,6 +28,7 @@ Blockchain::Blockchain(BlockchainSettings blockchainSettings) :
     _blocksIndex.resize(rawCount(blockchainSettings.numberOfBlocks) * 2);
     _smallestBlocks.resize(rawCount(blockchainSettings.numberOfBlocks) * 2);
     alpha = blockchainSettings.alpha;
+    cycle = blockchainSettings.cycle;
     totalFeesInput = 0;
     for (auto transaction : transactionFeeRate)
     {
@@ -36,35 +37,39 @@ Blockchain::Blockchain(BlockchainSettings blockchainSettings) :
     reset(blockchainSettings);
 }
 
-std::unique_ptr<Block> Blockchain::createBlock(const Block *parent, const Miner *miner, std::map<int,Value,std::greater<int>> value, bool wasUndercut) {
+std::unique_ptr<Block> Blockchain::createBlock(const Block *parent, const Miner *miner, std::map<int,Value,std::greater<int>> value, Value profitWeight) {
     
     if (_oldBlocks.size() == 0) {
-        
-        return std::make_unique<Block>(parent, miner, getTime(), value, wasUndercut);
+        return std::make_unique<Block>(parent, miner, getTime(), value, profitWeight);
     }
     
     auto block = std::move(_oldBlocks.back());
     _oldBlocks.pop_back();
-    block->reset(parent, miner, getTime(), value);
+    block->reset(parent, miner, getTime(), value, profitWeight);
     return block;
 }
 
 void Blockchain::reset(BlockchainSettings blockchainSettings) {
-    //valueNetworkTotal = 0;
     availableTransactions.clear();
     timeInSecs = BlockTime(0);
     secondsPerBlock = blockchainSettings.secondsPerBlock;
     transactionFeeRate = blockchainSettings.transactionFeeRate;
+    for(int i = 0; i < rawCount(blockchainSettings.numberOfBlocks) * 2;i++){
+	    _smallestBlocks[i].clear();
+	    _blocksIndex[i].clear();
+    }
     _maxHeightPub = BlockHeight(0);
     _oldBlocks.reserve(_oldBlocks.size() + _blocks.size());
     for (auto &block : _blocks) {
         _oldBlocks.push_back(std::move(block));
     }
     _blocks.clear();
-    _smallestBlocks[0].clear();
-    _blocksIndex[0].clear();
+    //_smallestBlocks[0].clear();
+    _oldestBlocks.clear();
+    //_blocksIndex[0].clear();
     auto genesis = std::make_unique<Block>(blockchainSettings.blockReward);
     _smallestBlocks[0].push_back(genesis.get());
+    _oldestBlocks[0] = genesis.get();
     _blocksIndex[0].push_back(_blocks.size());
     _blocks.push_back(std::move(genesis));
 }
@@ -74,13 +79,14 @@ void Blockchain::publishBlock(std::unique_ptr<Block> block) {
     assert(block->height <= _maxHeightPub + BlockHeight(1));
     
     HeightType height = rawHeight(block->height);
-    
     if (block->height > _maxHeightPub) {
-        _blocksIndex[height].clear();
-        _smallestBlocks[height].clear();
+    	_tempMaxHeightPub = block->height;
+    } 
+    if(_smallestBlocks[height].size() == 0){
+	_smallestBlocks[height].clear();
         _smallestBlocks[height].push_back(block.get());
-        _maxHeightPub = block->height;
-    } else {
+    }
+    else{
         std::vector<Block *> &smallestVector = _smallestBlocks[height];
         Value currFront;
         if(alpha != -1){
@@ -100,7 +106,6 @@ void Blockchain::publishBlock(std::unique_ptr<Block> block) {
         else{
             blockVal = block->value;
         }
-
         if (blockVal < currFront) {
             smallestVector.clear();
             smallestVector.push_back(block.get());
@@ -111,6 +116,11 @@ void Blockchain::publishBlock(std::unique_ptr<Block> block) {
 
     _blocksIndex[height].push_back(_blocks.size());
     _blocks.push_back(std::move(block));
+}
+
+void Blockchain::updateMaxHeightPub()
+{
+    _maxHeightPub = _tempMaxHeightPub;
 }
 
 BlockCount Blockchain::blocksOfHeight(BlockHeight height) const {
@@ -132,8 +142,12 @@ const std::vector<Block *> Blockchain::oldestBlocks(BlockHeight height) const {
     assert(possiblities.size() > 0);
     return possiblities;
 }
+void Blockchain::setOldest(BlockHeight height){
+    auto ans = oldestBlocks(height)[0];
+    _oldestBlocks[rawHeight(height)] = ans;
+}
 
-Block &Blockchain::oldest(BlockHeight height) const {
+Block &Blockchain::oldest(BlockHeight height) const{
     auto possiblities = oldestBlocks(height);
     return *possiblities[selectRandomIndex(possiblities.size())];
 }
@@ -158,35 +172,36 @@ const Block &Blockchain::winningHead() const {
         }
     }
     std::uniform_int_distribution<std::size_t> vectorDis(0, possiblities.size() - 1);
-    return *possiblities[selectRandomIndex(possiblities.size())];
+    //return *possiblities[selectRandomIndex(possiblities.size())];
+    return *possiblities[0];
 }
 
 void Blockchain::advanceToTime(BlockTime time) {
     assert(time >= timeInSecs);
+    //int tmpTime = time/secondsPerBlock;
     for (auto transaction: transactionFeeRate)
     {
         
-        /*
-        //used to simulate high fees coming in every cycleLength rounds; can be uncommented if needed
-        cycleLength = 2
-        highFeeValue = 2
-        if(transaction.first > 1 && time % cycleLength == 0)
+        /*if(transaction.first > 1 && tmpTime % cycle == 0)
         {
-            availableTransactions[transaction.first] = transactionFeeRate[transaction.first] * time / cycleLength;
-            availableTransactions[1] = 0;
+            availableTransactions[transaction.first] = transactionFeeRate[transaction.first] * tmpTime / cycle;
+	    availableTransactions[1] = transactionFeeRate[transaction.first] * tmpTime;
+	    long long numHigh = tmpTime / cycle;
+            availableTransactions[1] -= transactionFeeRate[transaction.first] * numHigh;
         }
         else if (transaction.first == 1)
         {
-            availableTransactions[transaction.first] += transactionFeeRate[highFeeValue] * time;
+            availableTransactions[transaction.first] += transactionFeeRate[1] * tmpTime;
         }
         else
         {
-            availableTransactions[1] = transactionFeeRate[transaction.first] * time;
-            long long numHigh = time / cycleLength;
+            availableTransactions[1] = transactionFeeRate[transaction.first] * tmpTime;
+            long long numHigh = tmpTime / cycle;
             availableTransactions[1] -= transactionFeeRate[transaction.first] * numHigh;
         }*/
-        availableTransactions[transaction.first] = transactionFeeRate[transaction.first] * time;
+	availableTransactions[transaction.first] = transactionFeeRate[transaction.first] * ((time/secondsPerBlock));
     }
+    availableTransactions[1] += 5000000000;
     timeInSecs = time;
 }
 
@@ -195,7 +210,7 @@ BlockValue Blockchain::expectedBlockSize() const {
 }
 
 TimeRate Blockchain::chanceToWin(HashRate hashRate) const {
-    return hashRate / secondsPerBlock;
+    return hashRate;
 }
 
 Block *Blockchain::blockByMinerAtHeight(BlockHeight height, const Miner &miner) const {
@@ -216,7 +231,7 @@ Block &Blockchain::most(BlockHeight height, const Miner &miner) const {
     return most(height);
 }
 
-Block &Blockchain::oldest(BlockHeight height, const Miner &miner) const {
+Block &Blockchain::oldest(BlockHeight height, const Miner &miner) const{
     Block *block = blockByMinerAtHeight(height, miner);
     if (block) {
         return *block;
@@ -242,6 +257,7 @@ Value Blockchain::remFees(const Block &block, const Alpha alphaCap) const {
 std::map<int,ValueRate,std::greater<int>> Blockchain::remAlpha(const Block &block,const Alpha alphaCap) const {
     std::map<int, Value,std::greater<int>> ans(availableTransactions);
     Value totalFees = 0;
+    int tmp;
     for(auto tx: availableTransactions)
     {
         if(block.txFeesInChain.find(tx.first) != block.txFeesInChain.end())

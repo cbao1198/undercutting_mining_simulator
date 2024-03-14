@@ -76,13 +76,13 @@ BlockTime MinerGroup::nextEventTime(const Blockchain &chain) {
 
 void MinerGroup::nextMineRound(Blockchain &blockchain, Alpha alpha) {
     assert(miningQueue.front()->nextMiningTime() >= blockchain.getTime());
+    blockchain.setOldest(blockchain.getMaxHeightPub());
     
     while (miningQueue.front()->nextMiningTime() == blockchain.getTime()) {
         std::pop_heap(begin(miningQueue), end(miningQueue), miningSort);
         Miner *miner = miningQueue.back();
         auto wantedBroadcast = miner->wantsToBroadcast();
         auto block = miner->miningPhase(blockchain, alpha);
-        //std::cout<<miner->params.name<<std::endl;
         if (block) {
             COMMENTARY("Miner " << miner->params.name << " publishes " << *block << "\n");
             broadcastQueue.push_back(std::move(block));

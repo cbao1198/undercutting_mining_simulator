@@ -59,7 +59,6 @@ void Miner::finalize(Blockchain &blockchain) {
 }
 
 std::unique_ptr<Block> Miner::miningPhase(Blockchain &chain, Alpha alpha) {
-    //std::cout<<"next miner:\n";
     assert(chain.getTime() == nextMiningTime());
     COMMENTARY("\tMiner " << params.name << "'s turn. " << strategy.get().name << ". ");
     
@@ -78,7 +77,6 @@ std::unique_ptr<Block> Miner::miningPhase(Blockchain &chain, Alpha alpha) {
     )
     
     _nextMiningTime = strategy.get().miningStyle->nextMiningTime(chain, *this);
-    
     if (block) {
         blocksMinedTotal++;
         if (strategy.get().publisher->withholdsBlocks()) {
@@ -136,6 +134,17 @@ std::ostream& operator<<(std::ostream& os, const Miner& miner) {
 
 void Miner::print(std::ostream& os) const {
     os << "[" << strategy.get().name  << "] miner " << params.name;
+}
+
+bool Miner::isFork() const{
+    return strategy.get().name.find("fork") != std::string::npos;
+}
+bool Miner::isFractional() const{
+    return strategy.get().name.find("fractional") != std::string::npos;
+}
+
+bool Miner::isPetty() const{
+    return strategy.get().name.find("petty") != std::string::npos;
 }
 
 bool ownBlock(const Miner *miner, const Block *block) {

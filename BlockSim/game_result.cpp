@@ -10,4 +10,4 @@
 
 #include "miner_result.hpp"
 
-GameResult::GameResult(std::vector<MinerResult> minerResults_, BlockCount totalBlocksMined_, BlockCount blocksInLongestChain_, Value moneyLeftAtEnd_, Value moneyInLongestChain_, Value totalVariance_) : minerResults(minerResults_), totalBlocksMined(totalBlocksMined_), blocksInLongestChain(blocksInLongestChain_), moneyLeftAtEnd(moneyLeftAtEnd_), moneyInLongestChain(moneyInLongestChain_), totalVariance(totalVariance_) {}
+GameResult::GameResult(std::vector<MinerResult> minerResults_, std::vector<const Block *> winningChain_,BlockCount totalBlocksMined_, BlockCount blocksInLongestChain_, Value moneyLeftAtEnd_, Value moneyInLongestChain_, Value totalVariance_) : minerResults(minerResults_), winningChain(winningChain_), totalBlocksMined(totalBlocksMined_), blocksInLongestChain(blocksInLongestChain_), moneyLeftAtEnd(moneyLeftAtEnd_), moneyInLongestChain(moneyInLongestChain_), totalVariance(totalVariance_) {}

@@ -56,16 +56,19 @@ Block &lazyBlockToMineOnNonAtomic(const Miner &, const Blockchain &chain, const 
     if (chain.getMaxHeightPub() == BlockHeight(0)) {
         return chain.most(chain.getMaxHeightPub());
     }
-    
-    if (chain.remFees(chain.most(chain.getMaxHeightPub()),alpha) >= chain.gap(chain.getMaxHeightPub())) {
-        return chain.most(chain.getMaxHeightPub());
+    if (std::min(chain.remFees(chain.most(chain.getMaxHeightPub()),alpha),Value(chain.remFees(chain.most(chain.getMaxHeightPub()),-1)*0.5)) >= chain.gap(chain.getMaxHeightPub())) {
+       return chain.most(chain.getMaxHeightPub());
     } else {
-        return chain.most(chain.getMaxHeightPub() - BlockHeight(1));
+       return chain.most(chain.getMaxHeightPub() - BlockHeight(1));
     }
 }
 
 std::map<int,Value,std::greater<int>> lazyValueInMinedChild(const Blockchain &chain, const Block &mineHere, const Alpha alpha) {
-    auto val = chain.remAlphaValCap(mineHere, chain.getTotalTransactions()/Value(2.0),alpha);
+    Value valCap = chain.remFees(mineHere,-1)*0.5;
+    if(mineHere.height < chain.getMaxHeightPub()){
+    	valCap = std::min(valCap, chain.gap(chain.getMaxHeightPub()));
+    }
+    auto val = chain.remAlphaValCap(mineHere, valCap, alpha);
     return val;
 }
 

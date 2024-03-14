@@ -30,7 +30,7 @@ double selectRandomChance() {
 }
 
 BlockTime selectMiningOffset(TimeRate mean) {
-    std::geometric_distribution<unsigned long> dis(rawRate(mean));
+    std::uniform_real_distribution<double> dis(0, mean);
     return BlockTime(dis(getGen()));
 }
 

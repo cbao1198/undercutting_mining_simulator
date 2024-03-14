@@ -15,7 +15,7 @@
 #include <stddef.h>
 #include <memory>
 #include <map>
-
+#include <iostream>
 class Block;
 class GenesisBlock;
 class Miner;
@@ -28,12 +28,15 @@ class Blockchain {
     std::map<int,ValueRate,std::greater<int>> transactionFeeRate;
     Alpha alpha;
     Value totalFeesInput;
+    int cycle;
     
     
     BlockHeight _maxHeightPub;
+    BlockHeight _tempMaxHeightPub;
     std::vector<std::vector<size_t>> _blocksIndex;
-    std::vector<std::vector<Block *>> _smallestBlocks; // cache smallest blocks of a given height
     std::vector<std::unique_ptr<Block>> _blocks;
+    std::vector<std::vector<Block *>> _smallestBlocks; // cache smallest blocks of a given height
+    std::map<int, Block *> _oldestBlocks; // cache smallest blocks of a given height
     
     std::vector<std::unique_ptr<Block>> _oldBlocks;
     
@@ -42,7 +45,7 @@ class Blockchain {
 public:
     Blockchain(BlockchainSettings blockchainSettings);
     
-    std::unique_ptr<Block> createBlock(const Block *parent, const Miner *miner, std::map<int,Value,std::greater<int>> value, bool wasUndercut);
+    std::unique_ptr<Block> createBlock(const Block *parent, const Miner *miner, std::map<int,Value,std::greater<int>> value, Value profitWeight);
     void reset(BlockchainSettings blockchainSettings);
 
     void publishBlock(std::unique_ptr<Block> block);
@@ -56,25 +59,27 @@ public:
     BlockCount blocksOfHeight(BlockHeight height) const;
     
     const std::vector<Block *> oldestBlocks(BlockHeight height) const;
+    void setOldest(BlockHeight height);
     Block &oldest(BlockHeight height) const;
     Block &most(BlockHeight age) const;
     
     void advanceToTime(BlockTime time);
-    
+    inline BlockTime getSecondsPerBlock() const {
+	return secondsPerBlock;
+    }	
     inline BlockHeight getMaxHeightPub() const {
         return _maxHeightPub;
     }
-    
+    void updateMaxHeightPub(); 
     inline BlockTime getTime() const {
         return timeInSecs;
     }
     
     inline Value getTotalTransactions() const {
-        //gets total VALUE of all available transactions(including those in chain)
         Value valueNetworkTotal = 0;
         for(auto transaction : availableTransactions)
         {
-            valueNetworkTotal += transaction.second;
+            valueNetworkTotal += transaction.first*transaction.second;
         }
         return valueNetworkTotal;
     }

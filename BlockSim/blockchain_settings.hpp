@@ -19,6 +19,7 @@ struct BlockchainSettings {
     BlockValue blockReward;
     BlockCount numberOfBlocks;
     Alpha alpha;
+    int cycle;
 };
 
 #endif /* blockchain_settings_hpp */

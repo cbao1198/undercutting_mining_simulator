@@ -58,10 +58,12 @@ public:
     std::unique_ptr<Block> miningPhase(Blockchain &blockchain, Alpha alpha);
     std::vector<std::unique_ptr<Block>> broadcastPhase(const Blockchain &chain);
     void printStrategy() const;
+    bool isFork() const;
+    bool isPetty() const;
+    bool isFractional() const;
     friend std::ostream& operator<<(std::ostream& os, const Miner& miner);
 };
 
 bool ownBlock(const Miner *miner, const Block *block);
-
 
 #endif /* miner_hpp */
